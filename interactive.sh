@@ -21,7 +21,7 @@ else
 fi
 
 export EDITOR
-alias e="$EDITOR"
+alias e="\$EDITOR"
 
 # Pager:
 LESS="FXR"
@@ -30,7 +30,7 @@ export LESS
 PAGER=less
 export PAGER
 
-alias ag="ag --pager=$PAGER"
+alias ag="ag --pager=\$PAGER"
 
 # Less colors
 CLICOLOR=YesPlease
