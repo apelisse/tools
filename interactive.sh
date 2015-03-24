@@ -30,6 +30,8 @@ export LESS
 PAGER=less
 export PAGER
 
+alias ag="ag --pager=$PAGER"
+
 # Less colors
 CLICOLOR=YesPlease
 export CLICOLOR
