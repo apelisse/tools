@@ -27,10 +27,18 @@ alias e="\$EDITOR"
 LESS="FXR"
 export LESS
 
-PAGER=less
+PAGER=bat
 export PAGER
 
-alias ag="ag --pager=\$PAGER"
+se() {
+    rg -p "$@" | $PAGER
+}
+
+alias sk="sk --bind 'enter:execute-silent($EDITOR {}&)'"
+alias sd="sk --ansi -i -c 'rg --color=always -i --line-number \"{}\"' --delimiter : --bind 'enter:execute-silent($EDITOR +{2} $PWD/{1}&)'"
+
+bind '"\033OP":"sk\n"'
+bind '"\033OQ":"sd\n"'
 
 # Less colors
 CLICOLOR=YesPlease
