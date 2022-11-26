@@ -23,22 +23,19 @@ fi
 export EDITOR
 alias e="\$EDITOR"
 
-# Pager:
-LESS="FXR"
-export LESS
-
-PAGER=bat
+PAGER="bat -p"
 export PAGER
 
 se() {
     rg -p "$@" | $PAGER
 }
 
-alias sk="sk --bind 'enter:execute-silent($EDITOR {}&)'"
-alias sd="sk --ansi -i -c 'rg --color=always -i --line-number \"{}\"' --delimiter : --bind 'enter:execute-silent($EDITOR +{2} $PWD/{1}&)'"
+alias bat="bat --style="changes,numbers""
 
+alias sk="sk --ansi -i -c 'rg --color=always -i --line-number \"{}\"' --delimiter : --bind 'enter:execute-silent($EDITOR +{2} {1})'"
+
+# Bind F1
 bind '"\033OP":"sk\n"'
-bind '"\033OQ":"sd\n"'
 
 # Less colors
 CLICOLOR=YesPlease
