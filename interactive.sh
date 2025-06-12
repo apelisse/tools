@@ -63,7 +63,7 @@ source "${GIT_COMPLETION_PATH}"
 source <(kubectl completion bash)
 
 function kubectl() {
-  # Change context
+  # Change context and optionally namespace
   if [[ "$1" == "context" ]]; then
     if [[ -z "$2" ]]; then
       echo "No context provided."
@@ -71,17 +71,21 @@ function kubectl() {
     fi
     export KUBE_CTX="$2"
     unset KUBE_NS
-    echo "Context set to $2"
+    if [[ -n "$3" ]]; then
+      export KUBE_NS="$3"
+      echo "Context set to $2 and namespace set to $3"
+    else
+      echo "Context set to $2"
+    fi
     return 0
   fi
 
   if [[ "$1" == "unset-context" ]]; then
-      command kubectl config unset current-context
-      unset KUBE_CTX
-      return 0
+    command kubectl config unset current-context
+    unset KUBE_CTX
+    return 0
   fi
 
-  # Change namespace
   if [[ "$1" == "namespace" ]]; then
     if [[ -z "$2" ]]; then
       echo "No namespace provided."
@@ -92,13 +96,8 @@ function kubectl() {
     return 0
   fi
 
-  if [[ -n "$KUBE_CTX" ]]; then
-      local kube_ctx="--context=${KUBE_CTX}"
-  fi
-
-  if [[ -n "$KUBE_NS" ]]; then
-      local kube_ns="--namespace=${KUBE_NS}"
-  fi
+  [[ -n "$KUBE_CTX" ]] && local kube_ctx="--context=${KUBE_CTX}"
+  [[ -n "$KUBE_NS" ]] && local kube_ns="--namespace=${KUBE_NS}"
 
   command kubectl ${kube_ctx} ${kube_ns} "$@"
 }
