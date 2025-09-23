@@ -52,15 +52,6 @@ then
     shopt -s histverify
 fi
 
-# Git and kubectl auto-completion
-GIT_COMPLETION_PATH="${HOME}/.tools/git-completion.bash"
-
-if [ ! -f "${GIT_COMPLETION_PATH}" ]; then
-  curl -s -o "${GIT_COMPLETION_PATH}" https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash
-fi
-source "${GIT_COMPLETION_PATH}"
-source <(kubectl completion bash)
-
 function kubectl() {
   # Change context and optionally namespace
   if [[ "$1" == "context" ]]; then
@@ -100,6 +91,34 @@ function kubectl() {
 
   command kubectl ${kube_ctx} ${kube_ns} "$@"
 }
+
+# Git and kubectl auto-completion
+GIT_COMPLETION_PATH="${HOME}/.tools/git-completion.bash"
+
+if [ ! -f "${GIT_COMPLETION_PATH}" ]; then
+  curl -s -o "${GIT_COMPLETION_PATH}" https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash
+fi
+source "${GIT_COMPLETION_PATH}"
+
+# Load kubectl bash completion and bind it to the wrapper name
+if command -v kubectl >/dev/null 2>&1; then
+  # Cache the completion script to a regular file to avoid
+  # macOS/bash3 quirks with process substitution not defining functions.
+  KUBECTL_COMPLETION_CACHE="${HOME}/.tools/kubectl-completion.bash"
+  # Generate or refresh cache file if missing or empty
+  if [ ! -s "$KUBECTL_COMPLETION_CACHE" ]; then
+    command kubectl completion bash > "$KUBECTL_COMPLETION_CACHE" 2>/dev/null || true
+  fi
+  # Source the cached script; fall back to process substitution if needed
+  if [ -s "$KUBECTL_COMPLETION_CACHE" ]; then
+    source "$KUBECTL_COMPLETION_CACHE"
+  else
+    # Last resort
+    source <(command kubectl completion bash)
+  fi
+  # Explicitly (re)bind the completion to the wrapper name
+  complete -o default -F __start_kubectl kubectl
+fi
 
 kube_ps1() {
   local context="${KUBE_CTX}"
