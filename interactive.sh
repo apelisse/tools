@@ -26,14 +26,13 @@ fi
 export EDITOR
 alias e="\$EDITOR"
 
-PAGER="bat -p"
-export PAGER
-
 se() {
     rg --vimgrep -p "$@" | $PAGER
 }
 
 alias bat="bat --style="changes,numbers""
+LESS=FXR
+export LESS
 
 alias sk="sk --ansi -i -c 'rg --color=always -i --line-number \"{}\"' --delimiter : --bind 'enter:execute-silent($EDITOR +{2} {1})'"
 
