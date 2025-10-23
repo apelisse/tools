@@ -27,17 +27,14 @@ export EDITOR
 alias e="\$EDITOR"
 
 se() {
-    rg --vimgrep -p "$@" | $PAGER
+    rg --vimgrep -p "$@" | ${PAGER:-less}
 }
 
 alias bat="bat --style="changes,numbers""
 LESS=FXR
 export LESS
 
-alias sk="sk --ansi -i -c 'rg --color=always -i --line-number \"{}\"' --delimiter : --bind 'enter:execute-silent($EDITOR +{2} {1})'"
-
-# Bind F1
-bind '"\033OP":"sk\n"'
+alias skf="sk --ansi -i -c 'rg --color=always -i --line-number \"{}\"' --delimiter : --bind 'enter:execute-silent($EDITOR +{2} {1})'"
 
 # Less colors
 CLICOLOR=YesPlease
