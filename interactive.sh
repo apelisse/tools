@@ -4,6 +4,9 @@
 # Make sure MacOS doesn't complain about non-bash.
 export BASH_SILENCE_DEPRECATION_WARNING=1
 
+# Make sure venv never changes your prompt.
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
 # Setup emacs
 emacs=$(command -v emacs)
 emacsclient=$(command -v emacsclient)
