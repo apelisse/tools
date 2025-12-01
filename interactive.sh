@@ -49,11 +49,37 @@ HISTFILESIZE=50000
 # Use a per-shell kubeconfig overlay so kubectl state stays local to
 # each terminal while still reading from the main config.
 mkdir -p "${HOME}/.kube/sessions"
+cleanup_kube_sessions() {
+  local dir="${HOME}/.kube/sessions"
+  local file pid
+  local nullglob_set=0
+
+  if shopt -q nullglob; then
+    nullglob_set=1
+  fi
+
+  shopt -s nullglob
+  for file in "${dir}"/session-*.yaml; do
+    pid="${file##*/session-}"
+    pid="${pid%.yaml}"
+    [[ "${pid}" =~ ^[0-9]+$ ]] || continue
+    if ! kill -0 "${pid}" 2>/dev/null; then
+      rm -f -- "${file}"
+    fi
+  done
+
+  if [[ ${nullglob_set} -eq 0 ]]; then
+    shopt -u nullglob
+  fi
+}
+
+cleanup_kube_sessions
 KUBE_SESSION_KUBECONFIG="${HOME}/.kube/sessions/session-$$.yaml"
 touch "${KUBE_SESSION_KUBECONFIG}"
 KUBE_BASE_CONFIG="${KUBECONFIG:-${HOME}/.kube/config}"
 KUBECONFIG="${KUBE_SESSION_KUBECONFIG}"
 export KUBE_SESSION_KUBECONFIG KUBE_BASE_CONFIG KUBECONFIG
+trap 'rm -f -- "${KUBE_SESSION_KUBECONFIG}"' EXIT
 
 # Bash specific options
 if test "${0##*bash}" == ""
