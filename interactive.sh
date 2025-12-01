@@ -46,6 +46,15 @@ export CLICOLOR
 HISTSIZE=10000
 HISTFILESIZE=50000
 
+# Use a per-shell kubeconfig overlay so kubectl state stays local to
+# each terminal while still reading from the main config.
+mkdir -p "${HOME}/.kube/sessions"
+KUBE_SESSION_KUBECONFIG="${HOME}/.kube/sessions/session-$$.yaml"
+touch "${KUBE_SESSION_KUBECONFIG}"
+KUBE_BASE_CONFIG="${KUBECONFIG:-${HOME}/.kube/config}"
+KUBECONFIG="${KUBE_SESSION_KUBECONFIG}"
+export KUBE_SESSION_KUBECONFIG KUBE_BASE_CONFIG KUBECONFIG
+
 # Bash specific options
 if test "${0##*bash}" == ""
 then
@@ -59,20 +68,20 @@ function kubectl() {
       echo "No context provided."
       return 1
     fi
-    export KUBE_CTX="$2"
-    unset KUBE_NS
+    local ctx="$2"
+    command kubectl config view --minify --raw --context "${ctx}" --kubeconfig="${KUBE_BASE_CONFIG}" >"${KUBE_SESSION_KUBECONFIG}"
     if [[ -n "$3" ]]; then
-      export KUBE_NS="$3"
-      echo "Context set to $2 and namespace set to $3"
+      local ns="$3"
+      kubectl namespace "${ns}"
+      echo "Context set to $ctx and namespace set to $ns"
     else
-      echo "Context set to $2"
+      echo "Context set to $ctx"
     fi
     return 0
   fi
 
   if [[ "$1" == "unset-context" ]]; then
-    command kubectl config unset current-context
-    unset KUBE_CTX
+    command kubectl config unset current-context --kubeconfig="${KUBE_SESSION_KUBECONFIG}"
     return 0
   fi
 
@@ -81,15 +90,13 @@ function kubectl() {
       echo "No namespace provided."
       return 1
     fi
-    export KUBE_NS="$2"
-    echo "Namespace set to $2"
+    local ns="$2"
+    command kubectl config set-context --current --namespace="${ns}" --kubeconfig="${KUBE_SESSION_KUBECONFIG}"
+    echo "Namespace set to $ns"
     return 0
   fi
 
-  [[ -n "$KUBE_CTX" ]] && local kube_ctx="--context=${KUBE_CTX}"
-  [[ -n "$KUBE_NS" ]] && local kube_ns="--namespace=${KUBE_NS}"
-
-  command kubectl ${kube_ctx} ${kube_ns} "$@"
+  command kubectl "$@"
 }
 
 # Git and kubectl auto-completion
@@ -121,21 +128,22 @@ if command -v kubectl >/dev/null 2>&1; then
 fi
 
 kube_ps1() {
-  local context="${KUBE_CTX}"
-  if [[ -z "$context" ]]; then
-    context="$(kubectl config current-context 2>/dev/null)"
+  local context
+  context="$(kubectl config current-context 2>/dev/null)"
+  if [[ -z "$context" && -n "${KUBE_CTX:-}" ]]; then
+    context="${KUBE_CTX}"
   fi
-
   if [[ -z "$context" ]]; then
     echo ""
     return
   fi
 
-  local ns="${KUBE_NS}"
-  if [[ -z "$ns" ]]; then
-    ns="$(kubectl config view --minify --output 'jsonpath={.contexts[?(@.name=="'$context'")].context.namespace}' 2>/dev/null)"
-    [[ -z "$ns" ]] && ns="default"
+  local ns
+  ns="$(kubectl config view --minify --output "jsonpath={.contexts[?(@.name==\"${context}\")].context.namespace}" 2>/dev/null)"
+  if [[ -z "$ns" && -n "${KUBE_NS:-}" ]]; then
+    ns="${KUBE_NS}"
   fi
+  [[ -z "$ns" ]] && ns="default"
 
   echo -n "${context}(${ns}) "
 }
