@@ -18,47 +18,31 @@ cleanup_kube_sessions() {
   )
 }
 
+# We treat our kube-config as a museum, never modify it.
+chmod a-w "${HOME}/.kube/config"
+
 cleanup_kube_sessions
 KUBE_SESSION_KUBECONFIG="${HOME}/.kube/sessions/session-$$.yaml"
 KUBE_BASE_CONFIG="${KUBECONFIG:-${HOME}/.kube/config}"
 KUBECONFIG="${KUBE_SESSION_KUBECONFIG}:${KUBE_BASE_CONFIG}"
 export KUBECONFIG
-trap 'rm -f -- "${KUBE_SESSION_KUBECONFIG}"' EXIT
 
-function kubectl() {
-  # Change context and optionally namespace
-  if [[ "$1" == "context" ]]; then
-    if [[ -z "$2" ]]; then
-      echo "No context provided."
-      return 1
-    fi
-    local ctx="$2"
-    command kubectl config view --minify --raw --context "${ctx}" --kubeconfig="${KUBE_BASE_CONFIG}" >"${KUBE_SESSION_KUBECONFIG}"
-    if [[ -n "$3" ]]; then
-      local ns="$3"
-      kubectl namespace "${ns}"
-      echo "Context set to $ctx and namespace set to $ns"
-    else
-      echo "Context set to $ctx"
-    fi
-    return 0
+
+kctx() {
+  if [[ -z "$1" ]]; then
+    rm -f -- "$KUBE_SESSION_KUBECONFIG"
+    : >"$KUBE_SESSION_KUBECONFIG"
+    return
   fi
+  command kubectl config view --minify --raw --context "$1" \
+    --kubeconfig="$KUBE_BASE_CONFIG" >"$KUBE_SESSION_KUBECONFIG"
 
-  if [[ "$1" == "unset-context" ]]; then
-    command kubectl config unset current-context --kubeconfig="${KUBE_SESSION_KUBECONFIG}"
-    return 0
+  if [[ -n "$2" ]]; then
+    kns "$2"
   fi
+}
 
-  if [[ "$1" == "namespace" ]]; then
-    if [[ -z "$2" ]]; then
-      echo "No namespace provided."
-      return 1
-    fi
-    local ns="$2"
-    command kubectl config set-context --current --namespace="${ns}" --kubeconfig="${KUBE_SESSION_KUBECONFIG}"
-    echo "Namespace set to $ns"
-    return 0
-  fi
-
-  command kubectl "$@"
+kns() {
+  command kubectl config set-context --current --namespace="$1" \
+    --kubeconfig="$KUBE_SESSION_KUBECONFIG"
 }

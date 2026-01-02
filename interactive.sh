@@ -87,9 +87,6 @@ source "$(dirname "${BASH_SOURCE[0]}")/kube-sessions.sh"
 kube_ps1() {
   local context
   context="$(kubectl config current-context 2>/dev/null)"
-  if [[ -z "$context" && -n "${KUBE_CTX:-}" ]]; then
-    context="${KUBE_CTX}"
-  fi
   if [[ -z "$context" ]]; then
     echo ""
     return
@@ -97,9 +94,6 @@ kube_ps1() {
 
   local ns
   ns="$(kubectl config view --minify --output "jsonpath={.contexts[?(@.name==\"${context}\")].context.namespace}" 2>/dev/null)"
-  if [[ -z "$ns" && -n "${KUBE_NS:-}" ]]; then
-    ns="${KUBE_NS}"
-  fi
   [[ -z "$ns" ]] && ns="default"
 
   echo -n "${context}(${ns}) "
