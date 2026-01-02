@@ -82,7 +82,10 @@ if command -v kubectl >/dev/null 2>&1; then
   complete -o default -F __start_kubectl kubectl
 fi
 
-source "$(dirname "${BASH_SOURCE[0]}")/kube-sessions.sh"
+KUBECONFIG="$(kube-session --init)"
+export KUBECONFIG
+# Keep kube-config read-only to prevent accidental changes.
+chmod a-w "${HOME}/.kube/config"
 
 kube_ps1() {
   local context
