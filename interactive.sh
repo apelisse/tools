@@ -109,3 +109,5 @@ export PS1='$(kube_ps1)\w> '
 function rename_terminal() {
   echo -ne "\033]0;$*\007"
 }
+
+PATH="$PATH:$(cd "$(dirname "${BASH_SOURCE:-$0}")" && pwd)"

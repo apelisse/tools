@@ -1,0 +1,4 @@
+#!/bin/sh
+# Usage: ... | trim [N]
+n="${1:-72}"
+exec cut -c "1-$n"

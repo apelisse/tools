@@ -1,0 +1,3 @@
+#!/bin/sh
+# Usage: ... | jqwatch | jq ...
+exec jq -c 'if has("items") then .items[] else . end'
