@@ -43,6 +43,8 @@ alias skf="sk --ansi -i -c 'rg --color=always -i --line-number \"{}\"' --delimit
 CLICOLOR=YesPlease
 export CLICOLOR
 
+export MCFLY_FUZZY=true
+export MCFLY_RESULTS_SORT=LAST_RUN
 command -v mcfly >/dev/null && eval "$(mcfly init bash)"
 
 HISTSIZE=10000
