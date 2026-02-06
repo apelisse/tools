@@ -104,7 +104,7 @@ kube_ps1() {
   echo -n "${context}(${ns}) "
 }
 
-export PS1='$(kube_ps1)\w> '
+PS1='$(kube_ps1)\w> '
 
 function rename_terminal() {
   echo -ne "\033]0;$*\007"
